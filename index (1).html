@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Генератор идей — мини-хакатон</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, Segoe UI, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 10%, #164e63 0%, transparent 34%), radial-gradient(circle at 85% 80%, #312e81 0%, transparent 38%), #07111e; color: #f8fafc; display: grid; place-items: center; padding: 22px; }
+    main { width: min(100%, 790px); background: rgba(15,23,42,.82); border: 1px solid #334155; border-radius: 28px; padding: clamp(24px,5vw,48px); box-shadow: 0 25px 80px #0006; }
+    .eyebrow { color: #67e8f9; text-transform: uppercase; letter-spacing: .19em; font-size: .77rem; font-weight: 700; }
+    h1 { font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.08; margin: 14px 0; }
+    p { color: #cbd5e1; line-height: 1.6; }
+    .panel { background: #111e31; border: 1px solid #334155; border-radius: 18px; padding: 24px; margin-top: 25px; }
+    #idea { font-size: clamp(1.2rem,3vw,1.65rem); color: #fff; font-weight: 700; min-height: 3.2em; }
+    .timer { font-variant-numeric: tabular-nums; font-size: clamp(2.5rem,9vw,5rem); font-weight: 800; letter-spacing: .03em; margin: 12px 0 22px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    button { border: 0; border-radius: 12px; padding: 13px 20px; font: inherit; font-weight: 700; cursor: pointer; background: #22d3ee; color: #082f49; }
+    button:hover { filter: brightness(1.1); }
+    button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    button.secondary { background: #334155; color: #fff; }
+    small { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Мини-хакатон · ваш первый веб-проект</div>
+    <h1>Генератор идей для хакатона</h1>
+    <p>Один файл HTML. Никаких внешних библиотек: придумайте тему проекта и запустите обратный отсчёт до защиты.</p>
+    <section class="panel" aria-labelledby="ideas-heading">
+      <h2 id="ideas-heading">Случайная идея</h2>
+      <div id="idea" aria-live="polite">Нажмите кнопку и получите идею проекта.</div>
+      <div class="actions"><button id="generate" type="button">Сгенерировать идею</button></div>
+    </section>
+    <section class="panel" aria-labelledby="timer-heading">
+      <h2 id="timer-heading">До защиты проекта</h2>
+      <div id="timer" class="timer" role="timer" aria-label="Оставшееся время">24:00:00</div>
+      <div class="actions">
+        <button id="toggle" type="button">Старт</button>
+        <button id="reset" type="button" class="secondary">Сброс</button>
+      </div>
+      <p><small>Таймер на 24 часа, с паузой и сбросом. Время сохраняется только пока эта страница открыта.</small></p>
+    </section>
+  </main>
+  <script>
+    'use strict';
+    const ideas = [
+      'Эко-карта пунктов переработки в городе',
+      'Умное расписание школьных кружков',
+      'Тренажёр для подготовки к олимпиадам',
+      'Помощник по планированию домашних заданий',
+      'Карта доступной городской среды',
+      'Игра по кибербезопасности для школьников',
+      'Платформа обмена учебными материалами',
+      'Дневник экологических привычек',
+      'Сайт поиска команды для хакатона',
+      'Тренажёр по системам счисления',
+      'Конструктор школьных мероприятий',
+      'Сервис выбора индивидуальной учебной траектории'
+    ];
+    const ideaEl = document.getElementById('idea');
+    let previousIdea = -1;
+    document.getElementById('generate').addEventListener('click', () => {
+      let index;
+      do { index = Math.floor(Math.random() * ideas.length); } while (index === previousIdea && ideas.length > 1);
+      previousIdea = index;
+      ideaEl.textContent = ideas[index];
+    });
+    const initialSeconds = 24 * 60 * 60;
+    let remaining = initialSeconds;
+    let intervalId = null;
+    let deadline = null;
+    const timerEl = document.getElementById('timer');
+    const toggleBtn = document.getElementById('toggle');
+    const format = n => String(n).padStart(2, '0');
+    function paint() {
+      const hours = Math.floor(remaining / 3600);
+      const minutes = Math.floor((remaining % 3600) / 60);
+      const seconds = remaining % 60;
+      timerEl.textContent = `${format(hours)}:${format(minutes)}:${format(seconds)}`;
+    }
+    function stop() {
+      if (intervalId !== null) clearInterval(intervalId);
+      intervalId = null;
+      deadline = null;
+      toggleBtn.textContent = remaining === 0 ? 'Заново' : 'Старт';
+    }
+    function tick() {
+      remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      paint();
+      if (remaining === 0) stop();
+    }
+    toggleBtn.addEventListener('click', () => {
+      if (intervalId !== null) {
+        tick(); stop();
+      } else {
+        if (remaining === 0) remaining = initialSeconds;
+        deadline = Date.now() + remaining * 1000;
+        toggleBtn.textContent = 'Пауза';
+        tick();
+        intervalId = setInterval(tick, 250);
+      }
+    });
+    document.getElementById('reset').addEventListener('click', () => { stop(); remaining = initialSeconds; paint(); });
+    paint();
+  </script>
+</body>
+</html>
