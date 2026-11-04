@@ -21,6 +21,26 @@
     button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
     button.secondary { background: #334155; color: #fff; }
     small { color: #94a3b8; }
+
+    /* Уровень B: дополнительная карточка участника (основные функции не изменены) */
+    .profile-layout { display: grid; grid-template-columns: 1fr 1.05fr; gap: 20px; align-items: start; }
+    .profile-form { display: grid; gap: 13px; }
+    .profile-form label { font-size: .9rem; color: #dbeafe; font-weight: 650; }
+    .profile-form input, .profile-form textarea { display: block; width: 100%; margin-top: 6px; padding: 12px 13px; border-radius: 11px; border: 1px solid #475569; background: #091727; color: #f8fafc; font: inherit; }
+    .profile-form textarea { resize: vertical; min-height: 90px; }
+    .profile-form input:focus-visible, .profile-form textarea:focus-visible { outline: 2px solid #22d3ee; outline-offset: 1px; }
+    .profile-card { border-radius: 18px; background: linear-gradient(145deg, #172554 0%, #0f2940 55%, #0e3033 100%); border: 1px solid #256d87; overflow: hidden; box-shadow: 0 15px 35px #0004; }
+    .profile-card-top { height: 76px; background: linear-gradient(95deg, #0891b2, #6366f1 75%, #8b5cf6); }
+    .profile-card-content { padding: 0 22px 23px; }
+    .avatar { width: 96px; height: 96px; margin-top: -47px; border: 4px solid #172554; border-radius: 23px; display: grid; place-items: center; background: #22354f; box-shadow: 0 9px 25px #0004; }
+    .avatar svg { width: 58px; height: 58px; stroke: #a5e9f5; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .photo-caption { margin-top: 8px; color: #a6b8ca; font-size: .75rem; }
+    .profile-card h3 { margin: 18px 0 8px; font-size: 1.45rem; overflow-wrap: anywhere; }
+    .profile-card p { margin: 0 0 16px; overflow-wrap: anywhere; }
+    .tech-tags { display: flex; gap: 7px; flex-wrap: wrap; }
+    .tech-tags span { color: #cffafe; background: #155e75; border: 1px solid #0e7490; border-radius: 999px; padding: 6px 10px; font-size: .77rem; font-weight: 650; }
+    .helper { margin-top: 14px; font-size: .82rem; }
+    @media (max-width: 680px) { .profile-layout { grid-template-columns: 1fr; } .panel { padding: 19px; } }
   </style>
 </head>
 <body>
@@ -41,6 +61,39 @@
         <button id="reset" type="button" class="secondary">Сброс</button>
       </div>
       <p><small>Таймер на 24 часа, с паузой и сбросом. Время сохраняется только пока эта страница открыта.</small></p>
+    </section>
+
+    <section class="panel" aria-labelledby="profile-heading">
+      <div class="eyebrow">Дополнительное задание · Уровень B</div>
+      <h2 id="profile-heading">Карточка участника хакатона</h2>
+      <p>Заполните поля и получите красивую визитку команды. Вместо фотографии пока используется заглушка.</p>
+      <div class="profile-layout">
+        <form class="profile-form" id="profile-form">
+          <label for="participant-name">Имя участника или команда
+            <input id="participant-name" type="text" value="Команда Альфа" maxlength="55" required>
+          </label>
+          <label for="participant-tech">Используемые технологии (через запятую)
+            <input id="participant-tech" type="text" value="HTML, CSS, JavaScript" maxlength="100">
+          </label>
+          <label for="participant-description">Краткое описание проекта
+            <textarea id="participant-description" maxlength="240" required>Создаём генератор идей для школьного хакатона.</textarea>
+          </label>
+          <div class="actions"><button type="submit">Обновить карточку</button></div>
+        </form>
+        <div class="profile-card" aria-label="Предпросмотр карточки участника">
+          <div class="profile-card-top"></div>
+          <div class="profile-card-content">
+            <div class="avatar" role="img" aria-label="Место для фотографии: изображение-заглушка">
+              <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="22" r="11"></circle><path d="M10 56c0-12 10-19 22-19s22 7 22 19"></path></svg>
+            </div>
+            <div class="photo-caption">Место для фотографии</div>
+            <h3 id="card-name">Команда Альфа</h3>
+            <p id="card-description">Создаём генератор идей для школьного хакатона.</p>
+            <div id="card-tech" class="tech-tags" aria-label="Технологии"><span>HTML</span><span>CSS</span><span>JavaScript</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="helper"><small>Учебная демонстрация: изменения через форму действуют только на открытой странице и не сохраняются на GitHub. Не публикуйте персональные данные школьников.</small></p>
     </section>
   </main>
   <script>
@@ -104,6 +157,26 @@
     });
     document.getElementById('reset').addEventListener('click', () => { stop(); remaining = initialSeconds; paint(); });
     paint();
+
+    // Уровень B: обновление только предпросмотра визитки.
+    // Используем textContent, чтобы ввод пользователя не исполнялся как HTML.
+    document.getElementById('profile-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const name = document.getElementById('participant-name').value.trim();
+      const description = document.getElementById('participant-description').value.trim();
+      const technologies = document.getElementById('participant-tech').value
+        .split(',').map(item => item.trim()).filter(Boolean).slice(0, 8);
+      if (!name || !description) return;
+      document.getElementById('card-name').textContent = name;
+      document.getElementById('card-description').textContent = description;
+      const tags = document.getElementById('card-tech');
+      tags.replaceChildren();
+      for (const technology of technologies) {
+        const tag = document.createElement('span');
+        tag.textContent = technology;
+        tags.appendChild(tag);
+      }
+    });
   </script>
 </body>
 </html>
